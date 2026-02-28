@@ -1,0 +1,63 @@
+#pragma once
+
+#include <JuceHeader.h>
+#include "TrackHeaderComponent.h"
+#include "../../Core/AppState.h"
+#include "../../Model/TrackModel.h"
+
+
+/*
+  Вертикальный список всех TrackHeaderComponent.
+  Слушает AppState (а именно узел Tracks).
+  Когда добавляется/удаляется трек в ValueTree, список автоматически
+  обновляет массив своих компонентов-хедеров и вызывает resized().
+  Управляет логикой выделения трека.
+ */
+class TrackListComponent : public juce::Component,
+                           private juce::ValueTree::Listener {
+ public:
+    TrackListComponent();
+    ~TrackListComponent() override;
+
+    //==========================================================================
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+
+ private:
+    // Перестраивает весь список компонентов на основе текущего состояния AppState
+    void rebuildTrackList();
+    
+    // Обновляет визуальное выделение всех треков в соответствии с выбранным ID
+    void updateSelection();
+
+    // Записывает ID выбранного трека в AppState (чтобы PianoRoll тоже об этом узнал)
+    void setSelectedTrackId(const juce::String& trackId);
+
+    // juce::ValueTree::Listener overrides
+    void valueTreeChildAdded(juce::ValueTree& parentTree,
+                             juce::ValueTree& childWhichHasBeenAdded) override;
+                             
+    void valueTreeChildRemoved(juce::ValueTree& parentTree,
+                               juce::ValueTree& childWhichHasBeenRemoved,
+                               int indexFromWhichChildWasRemoved) override;
+                               
+    void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged,
+                                  const juce::Identifier& property) override;
+
+    // Массив указателей на компоненты-хедеры
+    juce::OwnedArray<TrackHeaderComponent> trackHeaders;
+    
+    // Храним объекты TrackModel, чтобы они управляли своими ValueTree узлами
+    juce::OwnedArray<TrackModel> trackModels;
+
+    // Узел <Tracks> из AppState
+    juce::ValueTree tracksTree;
+    
+    // Корневой узел <Project> для отслеживания selectedTrackId
+    juce::ValueTree rootTree;
+
+    // Высота одного трека
+    static constexpr int kTrackHeight = 60;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TrackListComponent)
+};

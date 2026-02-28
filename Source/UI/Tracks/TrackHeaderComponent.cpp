@@ -1,0 +1,126 @@
+#include "TrackHeaderComponent.h"
+
+
+TrackHeaderComponent::TrackHeaderComponent(TrackModel& model) : trackModel(model) {
+
+    nameLabel.setText(trackModel.getName(), juce::dontSendNotification);
+    nameLabel.setFont(juce::Font(14.0f, juce::Font::plain));
+    nameLabel.setJustificationType(juce::Justification::centredLeft);
+    nameLabel.setEditable(/*single-click*/ false, /*double-click*/ true);
+    nameLabel.onTextChange = [this] {
+        trackModel.setName(nameLabel.getText());
+    };
+    addAndMakeVisible(nameLabel);
+
+    // Mute button
+    muteButton.setClickingTogglesState(true);
+    muteButton.setTooltip("Mute track");
+    muteButton.onClick = [this]
+    {
+        trackModel.setMuted(muteButton.getToggleState());
+    };
+    addAndMakeVisible(muteButton);
+
+    // Solo button
+    soloButton.setClickingTogglesState(true);
+    soloButton.setTooltip("Solo track");
+    soloButton.onClick = [this] {
+        trackModel.setSoloed(soloButton.getToggleState());
+    };
+    addAndMakeVisible(soloButton);
+
+    updateButtonStates();
+
+    // Подписываемся на изменения ValueTree
+    // любое внешнее изменение (Undo/Redo, другой UI) вызовет repaint().
+    trackModel.getTrackTree().addListener(this);
+}
+
+TrackHeaderComponent::~TrackHeaderComponent() {
+    // Обязательно отписываемся, чтобы избежать dangling pointer.
+    trackModel.getTrackTree().removeListener(this);
+}
+
+void TrackHeaderComponent::setSelected(bool shouldBeSelected)
+{
+    if (selected == shouldBeSelected)
+        return;
+
+    selected = shouldBeSelected;
+    repaint();
+}
+
+void TrackHeaderComponent::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+
+    // синий если выбран, иначе тёмно-серый
+    const juce::Colour bgColour = selected
+        ? juce::Colour(0xFF1A6EBF)   // активный трек — синий
+        : juce::Colour(0xFF2D2D2D);  // неактивный    — тёмно-серый
+    g.fillAll(bgColour);
+
+    // Цветной маркер слева
+    g.setColour(trackModel.getColour());
+    g.fillRect(bounds.removeFromLeft(kColorMarkerWidth));
+
+    // Нижняя разделительная линия
+    g.setColour(juce::Colour(0xFF1A1A1A));
+    g.drawLine(0.0f,
+               static_cast<float>(getHeight() - 1),
+               static_cast<float>(getWidth()),
+               static_cast<float>(getHeight() - 1),
+               1.0f);
+}
+
+
+void TrackHeaderComponent::resized() {
+    auto area = getLocalBounds()
+                    .reduced(kPadding)
+                    .withTrimmedLeft(kColorMarkerWidth); // не перекрываем маркер
+
+    // Кнопки правее — Solo, Mute
+    soloButton.setBounds(area.removeFromRight(kButtonSize)
+                             .withSizeKeepingCentre(kButtonSize, kButtonSize));
+    area.removeFromRight(kPadding / 2); // небольшой отступ между кнопками
+
+    muteButton.setBounds(area.removeFromRight(kButtonSize)
+                             .withSizeKeepingCentre(kButtonSize, kButtonSize));
+    area.removeFromRight(kPadding);
+
+    // Остаток — лейбл с именем
+    nameLabel.setBounds(area);
+}
+
+
+// mouseDown — сообщаем родителю что трек выбран
+void TrackHeaderComponent::mouseDown(const juce::MouseEvent&) {
+    if (onSelected)
+        onSelected();
+}
+
+// ValueTree::Listener
+void TrackHeaderComponent::valueTreePropertyChanged(
+    juce::ValueTree&,
+    const juce::Identifier& property) {
+    // Имя изменилось (например, после Undo) — обновляем лейбл без сигнала,
+    // чтобы не вызвать рекурсивный onTextChange.
+    if (property == juce::Identifier("name")) {
+        nameLabel.setText(trackModel.getName(), juce::dontSendNotification);
+    }
+
+    // Для mute/solo/color достаточно repaint() + обновить состояние кнопок.
+    updateButtonStates();
+    repaint();
+}
+
+
+// Private helpers
+void TrackHeaderComponent::updateButtonStates() {
+    // setToggleState с dontSendNotification — не вызывает onClick,
+    // избегаем рекурсивной записи в модель.
+    muteButton.setToggleState(trackModel.isMuted(),
+                              juce::dontSendNotification);
+    soloButton.setToggleState(trackModel.isSoloed(),
+                              juce::dontSendNotification);
+}
