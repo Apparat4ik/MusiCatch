@@ -2,8 +2,7 @@
 #include <JuceHeader.h>
 #include "../../Audio/AudioEngine.h"
 
-class TransportBar : public juce::Component,
-                     private juce::Timer {
+class TransportBar : public juce::Component {
  public:
     // Внедряем зависимость: передаем ссылку на движок
     explicit TransportBar(AudioEngine& engineToUse);
@@ -13,20 +12,18 @@ class TransportBar : public juce::Component,
     void resized() override;
 
  private:
-    void timerCallback() override;
-
     AudioEngine& engine;
 
     // UI элементы
-    juce::TextButton loadButton { "Load" };
-    juce::TextButton playButton   { "Play" };
-    juce::TextButton stopButton   { "Stop" };
-    juce::TextButton pauseButton  { "Pause" };
-    juce::TextButton recordButton { "Record" };
+    juce::TextButton loadButton   { juce::String::fromUTF8("⏏") }; // Load
+    juce::TextButton saveButton   { juce::String::fromUTF8("⤓") }; // Save
+    juce::TextButton playButton   { juce::String::fromUTF8("▶") };
+    juce::TextButton pauseButton  { juce::String::fromUTF8("⏸") };
+    juce::TextButton stopButton   { juce::String::fromUTF8("■") };
+    juce::TextButton recordButton { juce::String::fromUTF8("⏺") };
     
     std::unique_ptr<juce::FileChooser> fileChooser;
     
-    juce::Label timecodeLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportBar)
 };

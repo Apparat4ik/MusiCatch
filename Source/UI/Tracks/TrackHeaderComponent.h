@@ -33,8 +33,12 @@ private:
     bool selected = false;
 
     juce::Label  nameLabel;
+                                 
+    juce::TextButton exportMidiButton { "MIDI" };
     juce::TextButton muteButton  { "M" };
     juce::TextButton soloButton  { "S" };
+                                 
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     // Цветной прямоугольник-маркер (левый край панели)
     static constexpr int kColorMarkerWidth = 4;

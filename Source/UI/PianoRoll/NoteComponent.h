@@ -6,7 +6,7 @@
 
 class NoteComponent : public juce::Component {
 public:
-    NoteComponent(const juce::Uuid& noteId, TrackModel& track, juce::Colour colour);
+    NoteComponent(const juce::Uuid& noteId, TrackModel track, juce::Colour colour);
     ~NoteComponent() override;
 
     void paint(juce::Graphics& g) override;
@@ -27,7 +27,7 @@ public:
 
 private:
     juce::Uuid noteUuid;
-    TrackModel& trackModel;
+    TrackModel trackModel;
     juce::Colour noteColour;
     
     // Состояния для отрисовки и взаимодействия

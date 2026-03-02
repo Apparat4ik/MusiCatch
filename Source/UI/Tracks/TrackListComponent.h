@@ -44,11 +44,9 @@ class TrackListComponent : public juce::Component,
     void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged,
                                   const juce::Identifier& property) override;
 
-    // Массив указателей на компоненты-хедеры
+    juce::OwnedArray<TrackModel> trackModels;
     juce::OwnedArray<TrackHeaderComponent> trackHeaders;
     
-    // Храним объекты TrackModel, чтобы они управляли своими ValueTree узлами
-    juce::OwnedArray<TrackModel> trackModels;
 
     // Узел <Tracks> из AppState
     juce::ValueTree tracksTree;

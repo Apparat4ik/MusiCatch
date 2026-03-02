@@ -1,5 +1,5 @@
 #include "TrackHeaderComponent.h"
-
+#include "../../Utils/AudioExporter.h"
 
 TrackHeaderComponent::TrackHeaderComponent(TrackModel& model) : trackModel(model) {
 
@@ -11,6 +11,30 @@ TrackHeaderComponent::TrackHeaderComponent(TrackModel& model) : trackModel(model
         trackModel.setName(nameLabel.getText());
     };
     addAndMakeVisible(nameLabel);
+    
+    exportMidiButton.setTooltip("Export track notes to MIDI");
+    exportMidiButton.onClick = [this] {
+        
+        // Подставляем имя трека как название файла по умолчанию
+        juce::String defaultFileName = trackModel.getName() + ".mid";
+        
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Save Track as MIDI",
+            juce::File::getSpecialLocation(juce::File::userMusicDirectory).getChildFile(defaultFileName),
+            "*.mid");
+
+        auto chooserFlags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles;
+        
+        // Используем асинхронный запуск окна ОС
+        fileChooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc) {
+            auto file = fc.getResult();
+            if (file != juce::File{}) {
+                // Передаем модель текущего трека в статический метод экспортера
+                AudioExporter::exportTrackToMidi(trackModel, file);
+            }
+        });
+    };
+    addAndMakeVisible(exportMidiButton);
 
     // Mute button
     muteButton.setClickingTogglesState(true);
@@ -77,18 +101,24 @@ void TrackHeaderComponent::paint(juce::Graphics& g)
 void TrackHeaderComponent::resized() {
     auto area = getLocalBounds()
                     .reduced(kPadding)
-                    .withTrimmedLeft(kColorMarkerWidth); // не перекрываем маркер
+                    .withTrimmedLeft(kColorMarkerWidth);
 
-    // Кнопки правее — Solo, Mute
+    // Размещаем кнопки справа налево: Solo -> Mute -> MIDI
     soloButton.setBounds(area.removeFromRight(kButtonSize)
                              .withSizeKeepingCentre(kButtonSize, kButtonSize));
-    area.removeFromRight(kPadding / 2); // небольшой отступ между кнопками
+    area.removeFromRight(kPadding / 2);
 
     muteButton.setBounds(area.removeFromRight(kButtonSize)
                              .withSizeKeepingCentre(kButtonSize, kButtonSize));
+    area.removeFromRight(kPadding / 2);
+
+    // Кнопку MIDI делаем чуть шире
+    int midiButtonWidth = 36;
+    exportMidiButton.setBounds(area.removeFromRight(midiButtonWidth)
+                                   .withSizeKeepingCentre(midiButtonWidth, kButtonSize));
     area.removeFromRight(kPadding);
 
-    // Остаток — лейбл с именем
+    // Оставшееся слева место — лейбл с именем
     nameLabel.setBounds(area);
 }
 

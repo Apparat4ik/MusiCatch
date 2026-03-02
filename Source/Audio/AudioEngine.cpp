@@ -16,6 +16,9 @@ AudioEngine::AudioEngine() {
 }
 
 AudioEngine::~AudioEngine() {
+    stopTimer();
+    cancelPendingUpdate();
+    
     shutdownAudio();
     trackMixer.removeAllTracks();
     trackProcessors.clear();

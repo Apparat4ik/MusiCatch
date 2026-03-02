@@ -15,9 +15,6 @@ class PlayheadOverlay : public juce::Component,
     // Переопределяем hitTest для избирательного пропуска кликов.
     bool hitTest(int x, int y) override;
 
-    void mouseDown(const juce::MouseEvent& event) override;
-    void mouseDrag(const juce::MouseEvent& event) override;
-
     // Установка масштаба времени (чтобы переводить секунды движка в пиксели экрана)
     void setPixelsPerSecond(double newPixelsPerSecond);
     void setXOffset(int newOffset);

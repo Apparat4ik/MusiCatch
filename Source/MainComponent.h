@@ -2,22 +2,18 @@
 
 #include <JuceHeader.h>
 
-// Core & Audio
 #include "Core/AppState.h"
 #include "Audio/AudioEngine.h"
 
-// UI
 #include "UI/Styles/CustomLookAndFeel.h"
 #include "UI/Transport/TransportBar.h"
 #include "UI/Tracks/TrackListComponent.h"
 #include "UI/PianoRoll/PianoRollComponent.h"
 #include "UI/PianoRoll/PianoKeyboardComponent.h"
 #include "UI/PianoRoll/PlayheadOverlay.h"
+#include "UI/Transport/TimelineComponent.h"
 
-/**
- * Главный компонент приложения (Hub).
- * Владеет основными UI-модулями и координирует внедрение зависимостей (DI).
- */
+
 class MainComponent : public juce::Component,
                       private juce::ScrollBar::Listener {
  public:
@@ -31,15 +27,11 @@ class MainComponent : public juce::Component,
     // Кастомный стиль (LookAndFeel) должен быть объявлен до UI-компонентов,
     // чтобы при разрушении (деструкторе) он удалялся последним.
     CustomLookAndFeel customLookAndFeel;
-
-    // --- Backend & State ---
-    // Получаем ссылку на Singleton-состояние приложения
+                          
     AppState& appState;
-    
-    // Главный аудио-движок (он сам является AudioAppComponent и управляет потоком)
     AudioEngine audioEngine;
 
-    // --- UI Components ---
+    // UI
     TransportBar transportBar;
     TrackListComponent trackList;
     
@@ -50,6 +42,7 @@ class MainComponent : public juce::Component,
     void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
 
     PianoKeyboardComponent pianoKeyboard {pianoRoll};
+    TimelineComponent timeline { audioEngine };
     juce::Viewport keyboardViewport;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)

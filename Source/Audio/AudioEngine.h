@@ -35,15 +35,20 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
     
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override {
         mixer.getNextAudioBlock(bufferToFill);
+        
+        // Двигаем наш независимый глобальный таймер DAW на количество обработанных сэмплов
+        currentPosition += bufferToFill.numSamples;
     }
 
     // --- PositionableAudioSource методы ---
     void setNextReadPosition(juce::int64 newPosition) override {
+        currentPosition = newPosition; // Синхронизируем глобальное время
         for (auto* t : tracks) t->setNextReadPosition(newPosition);
     }
     
     juce::int64 getNextReadPosition() const override {
-        return tracks.isEmpty() ? 0 : tracks.getFirst()->getNextReadPosition();
+        // Возвращаем глобальное время, а не время пустого первого трека!
+        return currentPosition;
     }
     
     juce::int64 getTotalLength() const override {
@@ -59,15 +64,22 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
  private:
     juce::MixerAudioSource mixer;
     juce::Array<TrackProcessor*> tracks;
+    
+    // Новая переменная: независимый счетчик времени
+    juce::int64 currentPosition = 0;
 };
 
-// --- Основной движок ---
+
+
 class AudioEngine : public juce::AudioAppComponent,
                     private juce::Timer,
                     private juce::AsyncUpdater {
  public:
     AudioEngine();
     ~AudioEngine() override;
+                        
+    PositionableMixerSource& getTrackMixer() { return trackMixer; }
+    double getCurrentSampleRate() const { return currentSampleRate; }
 
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
@@ -98,7 +110,6 @@ class AudioEngine : public juce::AudioAppComponent,
  private:
     void timerCallback() override;
 
-    juce::AudioDeviceManager deviceManager;
     juce::AudioFormatManager formatManager;
                         
     std::atomic<bool> recording { false };

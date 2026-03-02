@@ -1,9 +1,9 @@
 #include "NoteComponent.h"
 
-NoteComponent::NoteComponent(const juce::Uuid& id, TrackModel& track, juce::Colour colour)
-    : noteUuid(id),
-      trackModel(track),
-      noteColour(colour) {
+NoteComponent::NoteComponent(const juce::Uuid& id, TrackModel track, juce::Colour colour)
+    : noteUuid(id)
+    , trackModel(track)
+    , noteColour(colour) {
     // Компонент не "невидимый" для мыши
     setInterceptsMouseClicks(true, false);
 }

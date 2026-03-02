@@ -5,8 +5,7 @@ const juce::Identifier AppState::projectNodeId ("Project");
 const juce::Identifier AppState::tracksNodeId  ("Tracks");
 const juce::Identifier AppState::trackNodeId   ("Track");
 
-AppState& AppState::getInstance()
-{
+AppState& AppState::getInstance() {
     static AppState instance;
     return instance;
 }

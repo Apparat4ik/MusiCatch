@@ -2,14 +2,8 @@
 
 #include <JuceHeader.h>
 
-/**
- * Обертка над juce::ValueTree.
- * Реализует потокобезопасный доступ к данным проекта.
- */
 class AppState {
   public:
-    // Паттерн Singleton (опциональное использование)
-    // В MainComponent лучше передавать ссылку, но для глобального доступа оставим это.
     static AppState& getInstance();
 
     AppState();
@@ -46,5 +40,5 @@ class AppState {
     static const juce::Identifier tracksNodeId;
     static const juce::Identifier trackNodeId;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppState)
+    JUCE_DECLARE_NON_COPYABLE(AppState)
 };
