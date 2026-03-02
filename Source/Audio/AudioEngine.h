@@ -84,6 +84,8 @@ class AudioEngine : public juce::AudioAppComponent,
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
+    void handleAsyncUpdate() override;
+
 
     // Управление транспортом (глобально для всех треков)
     void play() { transportSource.start(); }

@@ -23,6 +23,12 @@ AudioEngine::~AudioEngine() {
     trackProcessors.clear();
 }
 
+
+void AudioEngine::handleAsyncUpdate() {
+    // Здесь можно уведомлять UI (например, PianoRoll) о смене playhead
+}
+
+
 void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
     currentSampleRate = sampleRate;
     currentBlockSize = samplesPerBlockExpected; // Сохраняем размер блока
