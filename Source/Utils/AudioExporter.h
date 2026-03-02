@@ -12,5 +12,5 @@ public:
     // Экспорт распознанных нот выбранного трека в MIDI
     static bool exportTrackToMidi(const TrackModel& track, const juce::File& targetFile);
 private:
-    AudioExporter() = delete; // Запрещаем создание экземпляров
+    AudioExporter() = delete;
 };

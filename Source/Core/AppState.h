@@ -21,15 +21,9 @@ class AppState {
     // Возвращает корневой узел для привязки глобальных слушателей (Listeners)
     juce::ValueTree& getRootNode() { return rootNode; }
 
-    /**
-     * Возвращает мьютекс для блокировки извне.
-     * ВАЖНО: Используйте ScopedLock(appState.getLock()) в UI при итерации по нотам,
-     * чтобы аудио-поток не изменил данные во время отрисовки.
-     */
     juce::CriticalSection& getLock() { return dataLock; }
 
-  private:
-    // Корневое дерево данных. Тип: "Project"
+ private:
     juce::ValueTree rootNode;
 
     // Мьютекс для синхронизации доступа (UI vs Audio Analysis Thread)

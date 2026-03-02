@@ -13,10 +13,9 @@ bool AudioExporter::exportProjectToWav(AudioEngine& engine, const juce::File& ta
     double sampleRate = engine.getCurrentSampleRate();
     if (sampleRate <= 0) sampleRate = 44100.0;
 
-    // Инициализируем формат WAV
     juce::WavAudioFormat wavFormat;
     
-    // Создаем writer
+
     std::unique_ptr<juce::AudioFormatWriter> writer(
         wavFormat.createWriterFor(new juce::FileOutputStream(targetFile),
                                   sampleRate,
@@ -32,7 +31,7 @@ bool AudioExporter::exportProjectToWav(AudioEngine& engine, const juce::File& ta
     }
 
 
-    // Временно останавливаем транспорт, чтобы избежать конфликтов (data race)
+    // Временно останавливаем транспорт, чтобы избежать гонки данных
     bool wasPlaying = engine.isPlaying();
     if (wasPlaying) {
         engine.stop();
@@ -96,12 +95,12 @@ bool AudioExporter::exportTrackToMidi(const TrackModel& track, const juce::File&
         auto startTick = static_cast<double>(note.startTime * ticksPerSecond);
         auto endTick = static_cast<double>((note.startTime + note.duration) * ticksPerSecond);
 
-        // Событие Note On (нажатие клавиши)
+        // Событие Note On
         // Канал 1, высота тона (0-127), velocity (0.0 - 1.0)
         auto noteOn = juce::MidiMessage::noteOn(1, note.midiPitch, note.velocity);
         noteOn.setTimeStamp(startTick);
 
-        // Событие Note Off (отпускание клавиши)
+        // Событие Note Off
         auto noteOff = juce::MidiMessage::noteOff(1, note.midiPitch, 0.0f);
         noteOff.setTimeStamp(endTick);
 
@@ -109,7 +108,6 @@ bool AudioExporter::exportTrackToMidi(const TrackModel& track, const juce::File&
         sequence.addEvent(noteOff);
     }
 
-    // JUCE автоматически свяжет Note On и Note Off события
     sequence.updateMatchedPairs();
 
     // Создаем объект MIDI-файла и записываем в него нашу последовательность

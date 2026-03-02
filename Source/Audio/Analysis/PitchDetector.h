@@ -3,8 +3,7 @@
 #include <vector>
 #include "../../Model/NoteData.h"
 
-class PitchDetector
-{
+class PitchDetector {
 public:
     PitchDetector(int fftOrder = 10);  // 1024 точек
     ~PitchDetector();

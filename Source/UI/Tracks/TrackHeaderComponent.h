@@ -22,7 +22,6 @@ class TrackHeaderComponent : public juce::Component,
     void mouseDown(const juce::MouseEvent& e) override;
 
 private:
-    // juce::ValueTree::Listener overrides
     void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged,
                                   const juce::Identifier& property) override;
 

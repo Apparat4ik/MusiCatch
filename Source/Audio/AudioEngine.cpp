@@ -5,8 +5,7 @@ AudioEngine::AudioEngine() {
     formatManager.registerBasicFormats();
 
     // Цепочка: Микшер треков вставляется в Транспорт.
-    // Теперь транспорт управляет позицией всего микшера!
-    transportSource.setSource(&trackMixer, 0, nullptr, 44100.0); // sampleRate обновится в prepareToPlay
+    transportSource.setSource(&trackMixer, 0, nullptr, 44100.0);
 
     // Для безопасного вывода в систему
     resampler = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
@@ -29,7 +28,6 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
     currentBlockSize = samplesPerBlockExpected; // Сохраняем размер блока
     
     recordingBuffer.prepareToRecord(sampleRate);
-    //tempRecordBuffer.setSize(1, samplesPerBlockExpected);
     
     trackMixer.prepareToPlay(samplesPerBlockExpected, sampleRate);
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
@@ -39,9 +37,8 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 }
 
 void AudioEngine::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    // --- ЗАПИСЬ С МИКРОФОНА ---
     // В AudioAppComponent буфер изначально содержит аудио с входных каналов ОС.
-    // Мы забираем эти данные ДО того, как микшер и ресемплер их перезапишут.
+    // забираем эти данные ДО того, как микшер и ресемплер их перезапишут.
     if (recording.load()) {
         // Безопасно передаем сырые данные с микрофона (0-й канал) напрямую в FIFO
         if (bufferToFill.buffer->getNumChannels() > 0) {
@@ -64,9 +61,6 @@ void AudioEngine::releaseResources() {
     trackMixer.releaseResources();
 }
 
-void AudioEngine::handleAsyncUpdate() {
-    // Здесь можно уведомлять UI (например, PianoRoll) о смене playhead
-}
 
 void AudioEngine::timerCallback() {
     triggerAsyncUpdate(); // Безопасный вызов обновления UI из потока таймера
@@ -90,7 +84,6 @@ void AudioEngine::removeTrack(TrackProcessor* trackToRemove) {
 void AudioEngine::loadFileIntoTrack(TrackProcessor* track, const juce::File& file) {
     if (track == nullptr) return;
 
-    // Caller takes ownership of reader
     auto* reader = formatManager.createReaderFor(file);
     if (reader != nullptr) {
         // Создаем Positionable Source (true = source сам удалит reader)
@@ -122,8 +115,6 @@ void AudioEngine::setRecording(bool shouldRecord) {
             
             PitchDetector detector(11); // 11 = 2048 точек для чуть лучшей точности на низах
             std::vector<NoteData> detectedNotes = detector.analyzeTrack(finalBuffer, currentSampleRate);
-            
-            // DBG("Запись остановлена. Распознано нот: " << detectedNotes.size());
 
             auto memorySource = std::make_unique<juce::MemoryAudioSource>(finalBuffer, true, false);
             
@@ -144,7 +135,7 @@ void AudioEngine::setRecording(bool shouldRecord) {
                     model.addNote(note);
                 }
                 
-                // Делаем этот трек активным, чтобы PianoRoll мгновенно переключился на него!
+                // Делаем этот трек активным, чтобы PianoRoll мгновенно переключился на него
                 appState.getRootNode().setProperty("selectedTrackId", model.getUuid().toString(), nullptr);
             });
         }

@@ -8,25 +8,23 @@ public:
     TrackProcessor();
     ~TrackProcessor() override;
 
-    // --- Методы PositionableAudioSource ---
+    // Методы PositionableAudioSource
     void setNextReadPosition(juce::int64 newPosition) override;
     juce::int64 getNextReadPosition() const override;
     juce::int64 getTotalLength() const override;
     bool isLooping() const override;
     void setLooping(bool shouldLoop) override;
 
-    // --- Методы AudioSource ---
+    // Методы AudioSource
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void releaseResources() override;
     
-    // ВАЖНО: Вызывается в RT-потоке. Никаких new/delete/printf/std::vector!
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
 
-    // --- Управление треком ---
-    // Установка нового аудио источника "на лету"
+    // Управление треком
     void setSource(std::unique_ptr<juce::PositionableAudioSource> newSource);
 
-    // Управление состояниями (потокобезопасно через std::atomic)
+    // Управление состояниями
     void setMute(bool shouldMute);
     bool getMute() const;
 
@@ -48,7 +46,7 @@ private:
     std::atomic<bool> isSoloed { false };
     std::atomic<bool> mutedByOtherSolo { false };
 
-    // Кэшируем параметры для инициализации новых source'ов "на лету"
+    // Кэшируем параметры для инициализации новых source'ов
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
 

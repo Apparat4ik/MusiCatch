@@ -16,8 +16,7 @@ void TrackProcessor::setSource(std::unique_ptr<juce::PositionableAudioSource> ne
     currentSource = std::move(newSource);
 
     // Если движок уже работает, нужно подготовить новый сурс сразу же
-    if (currentSource != nullptr && currentSampleRate > 0.0)
-    {
+    if (currentSource != nullptr && currentSampleRate > 0.0) {
         currentSource->prepareToPlay(currentBlockSize, currentSampleRate);
     }
 }
@@ -38,11 +37,9 @@ void TrackProcessor::releaseResources() {
 }
 
 void TrackProcessor::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    // 1. Проверяем флаги ДО генерации аудио
     bool muteActive = isMuted.load(std::memory_order_relaxed) ||
                       mutedByOtherSolo.load(std::memory_order_relaxed);
 
-    // 2. Пытаемся захватить мьютекс (RT-safe)
     if (sourceMutex.tryEnter()) {
         if (currentSource != nullptr) {
             currentSource->getNextAudioBlock(bufferToFill);
@@ -90,7 +87,7 @@ void TrackProcessor::setLooping(bool shouldLoop) {
         currentSource->setLooping(shouldLoop);
 }
 
-// --- Управление состояниями ---
+// Управление состояниями
 void TrackProcessor::setMute(bool shouldMute) { isMuted.store(shouldMute, std::memory_order_relaxed); }
 bool TrackProcessor::getMute() const { return isMuted.load(std::memory_order_relaxed); }
 

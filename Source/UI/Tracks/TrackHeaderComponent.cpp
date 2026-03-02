@@ -123,18 +123,15 @@ void TrackHeaderComponent::resized() {
 }
 
 
-// mouseDown — сообщаем родителю что трек выбран
 void TrackHeaderComponent::mouseDown(const juce::MouseEvent&) {
     if (onSelected)
         onSelected();
 }
 
 // ValueTree::Listener
-void TrackHeaderComponent::valueTreePropertyChanged(
-    juce::ValueTree&,
-    const juce::Identifier& property) {
-    // Имя изменилось (например, после Undo) — обновляем лейбл без сигнала,
-    // чтобы не вызвать рекурсивный onTextChange.
+void TrackHeaderComponent::valueTreePropertyChanged(juce::ValueTree&,
+                                                    const juce::Identifier& property) {
+    
     if (property == juce::Identifier("name")) {
         nameLabel.setText(trackModel.getName(), juce::dontSendNotification);
     }
@@ -145,10 +142,7 @@ void TrackHeaderComponent::valueTreePropertyChanged(
 }
 
 
-// Private helpers
 void TrackHeaderComponent::updateButtonStates() {
-    // setToggleState с dontSendNotification — не вызывает onClick,
-    // избегаем рекурсивной записи в модель.
     muteButton.setToggleState(trackModel.isMuted(),
                               juce::dontSendNotification);
     soloButton.setToggleState(trackModel.isSoloed(),

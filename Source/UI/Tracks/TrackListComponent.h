@@ -6,37 +6,22 @@
 #include "../../Model/TrackModel.h"
 
 
-/*
-  Вертикальный список всех TrackHeaderComponent.
-  Слушает AppState (а именно узел Tracks).
-  Когда добавляется/удаляется трек в ValueTree, список автоматически
-  обновляет массив своих компонентов-хедеров и вызывает resized().
-  Управляет логикой выделения трека.
- */
 class TrackListComponent : public juce::Component,
                            private juce::ValueTree::Listener {
  public:
     TrackListComponent();
     ~TrackListComponent() override;
 
-    //==========================================================================
     void paint(juce::Graphics& g) override;
     void resized() override;
 
  private:
-    // Перестраивает весь список компонентов на основе текущего состояния AppState
     void rebuildTrackList();
-    
-    // Обновляет визуальное выделение всех треков в соответствии с выбранным ID
     void updateSelection();
-
-    // Записывает ID выбранного трека в AppState (чтобы PianoRoll тоже об этом узнал)
     void setSelectedTrackId(const juce::String& trackId);
-
-    // juce::ValueTree::Listener overrides
     void valueTreeChildAdded(juce::ValueTree& parentTree,
                              juce::ValueTree& childWhichHasBeenAdded) override;
-                             
+                               
     void valueTreeChildRemoved(juce::ValueTree& parentTree,
                                juce::ValueTree& childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
@@ -48,10 +33,10 @@ class TrackListComponent : public juce::Component,
     juce::OwnedArray<TrackHeaderComponent> trackHeaders;
     
 
-    // Узел <Tracks> из AppState
+    // Узел Tracks из AppState
     juce::ValueTree tracksTree;
     
-    // Корневой узел <Project> для отслеживания selectedTrackId
+    // Корневой узел Project для отслеживания selectedTrackId
     juce::ValueTree rootTree;
 
     // Высота одного трека

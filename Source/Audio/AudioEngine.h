@@ -26,7 +26,7 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
         tracks.clear();
     }
 
-    // --- AudioSource методы ---
+    // AudioSource методы
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override {
         mixer.prepareToPlay(samplesPerBlockExpected, sampleRate);
     }
@@ -40,14 +40,14 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
         currentPosition += bufferToFill.numSamples;
     }
 
-    // --- PositionableAudioSource методы ---
+    // PositionableAudioSource методы
     void setNextReadPosition(juce::int64 newPosition) override {
         currentPosition = newPosition; // Синхронизируем глобальное время
         for (auto* t : tracks) t->setNextReadPosition(newPosition);
     }
     
     juce::int64 getNextReadPosition() const override {
-        // Возвращаем глобальное время, а не время пустого первого трека!
+        // Возвращаем глобальное время
         return currentPosition;
     }
     
@@ -65,7 +65,7 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
     juce::MixerAudioSource mixer;
     juce::Array<TrackProcessor*> tracks;
     
-    // Новая переменная: независимый счетчик времени
+    // независимый счетчик времени
     juce::int64 currentPosition = 0;
 };
 
@@ -84,7 +84,6 @@ class AudioEngine : public juce::AudioAppComponent,
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
-    void handleAsyncUpdate() override;
 
     // Управление транспортом (глобально для всех треков)
     void play() { transportSource.start(); }

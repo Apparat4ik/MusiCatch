@@ -83,8 +83,7 @@ void TrackModel::addNote(const NoteData& note) {
 
 void TrackModel::removeNote(int noteIndex) {
     auto notesNode = trackTree.getChildWithName(notesNodeId);
-    if (notesNode.isValid() && noteIndex >= 0 && noteIndex < notesNode.getNumChildren())
-    {
+    if (notesNode.isValid() && noteIndex >= 0 && noteIndex < notesNode.getNumChildren()) {
         notesNode.removeChild(noteIndex, nullptr);
     }
 }

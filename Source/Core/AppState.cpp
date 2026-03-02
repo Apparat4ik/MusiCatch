@@ -1,6 +1,6 @@
 #include "AppState.h"
 
-// Инициализация статических идентификаторов
+
 const juce::Identifier AppState::projectNodeId ("Project");
 const juce::Identifier AppState::tracksNodeId  ("Tracks");
 const juce::Identifier AppState::trackNodeId   ("Track");
@@ -12,7 +12,6 @@ AppState& AppState::getInstance() {
 
 AppState::AppState() : rootNode (projectNodeId) {
     // Инициализируем структуру: Project -> Tracks
-    // Используем валидный ValueTree, чтобы избежать ошибок при доступе
     auto tracks = juce::ValueTree(tracksNodeId);
     rootNode.addChild(tracks, -1, nullptr);
 }
@@ -56,9 +55,6 @@ void AppState::removeTrack(int index) {
 
 juce::ValueTree AppState::getTrackList() {
     // Возвращаем копию ссылки на узел Tracks.
-    // Сам объект ValueTree легковесный (reference counted).
-    // Блокировка здесь не обязательна для чтения самого узла,
-    // но нужна, если мы гарантируем атомарность получения.
     const juce::ScopedLock sl (dataLock);
     return rootNode.getChildWithName(tracksNodeId);
 }

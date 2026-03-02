@@ -2,15 +2,13 @@
 #include <cmath>
 
 PitchDetector::PitchDetector(int fftOrder)
-    : fft(fftOrder)
-{
+    : fft(fftOrder) {
     int fftSize = 1 << fftOrder;
     fftData.malloc(fftSize * 2);  // real + imag (но используем только real для forward)
 
     hannWindow.setSize(1, fftSize, false, false, true);
     auto* w = hannWindow.getWritePointer(0);
-    for (int i = 0; i < fftSize; ++i)
-    {
+    for (int i = 0; i < fftSize; ++i) {
         w[i] = 0.5f * (1.0f - std::cos(juce::MathConstants<float>::twoPi * i / fftSize));
     }
 }
@@ -24,7 +22,7 @@ std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>
 
     int numSamples = buffer.getNumSamples();
     int fftSize = fft.getSize();
-    int hopSize = fftSize / 2; // Шаг окна (50% перекрытие для плавности)
+    int hopSize = fftSize / 2; // Шаг окна
 
     int currentMidiPitch = -1;
     float currentNoteStart = 0.0f;
@@ -37,7 +35,7 @@ std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>
         // Копируем окно данных
         windowBuffer.copyFrom(0, 0, buffer, 0, i, fftSize);
         
-        // Используем твой базовый метод для определения питча в этом окне
+        // Используем базовый метод для определения питча в этом окне
         auto notes = analyze(windowBuffer, sampleRate);
         int detectedPitch = notes.empty() ? -1 : notes[0].midiPitch;
         
@@ -79,8 +77,7 @@ std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>
 }
 
 
-std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buffer, double sampleRate)
-{
+std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buffer, double sampleRate) {
     if (buffer.getNumChannels() == 0) return {};
     int numSamples = buffer.getNumSamples();
     int fftSize = fft.getSize();
@@ -92,8 +89,7 @@ std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buf
 
     // Подготовка данных + окно
     float* fftReal = fftData;
-    for (int i = 0; i < fftSize; ++i)
-    {
+    for (int i = 0; i < fftSize; ++i) {
         fftReal[i] = (i < numSamples ? input[i] : 0.0f) * hannWindow.getSample(0, i);
     }
 
@@ -102,8 +98,7 @@ std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buf
 
     // Поиск пика
     float freq = findPitchFreq(fftReal, fftSize, sampleRate);
-    if (freq > 50.0f && freq < 2000.0f)
-    {
+    if (freq > 50.0f && freq < 2000.0f) {
         NoteData note;
         note.midiPitch = juce::jlimit(0, 127, freqToMidi(freq));
         note.startTime = 0.0f;
@@ -119,8 +114,7 @@ float PitchDetector::findPitchFreq(const float* spectrum, int fftSize, double sa
     float maxMag = 0.0f;
     int maxBin = 0;
     for (int i = 4; i < fftSize / 2; ++i) {
-        if (spectrum[i] > maxMag)
-        {
+        if (spectrum[i] > maxMag) {
             maxMag = spectrum[i];
             maxBin = i;
         }
@@ -132,8 +126,7 @@ float PitchDetector::findPitchFreq(const float* spectrum, int fftSize, double sa
         float b = spectrum[maxBin];
         float c = spectrum[maxBin + 1];
         float denom = a - 2.0f * b + c;
-        if (std::abs(denom) > 1e-6f)
-        {
+        if (std::abs(denom) > 1e-6f) {
             float delta = 0.5f * (a - c) / denom;
             return (maxBin + delta) * sampleRate / fftSize;
         }

@@ -21,7 +21,6 @@ TrackListComponent::~TrackListComponent() {
 
 
 void TrackListComponent::paint(juce::Graphics& g) {
-    // Фон под списком треков
     g.fillAll(juce::Colour(0xFF1E1E1E));
 }
 
@@ -39,14 +38,11 @@ void TrackListComponent::rebuildTrackList() {
 
     const juce::ScopedLock sl(AppState::getInstance().getLock());
 
-    // Проходим по всем дочерним узлам <Track> внутри <Tracks>
     for (int i = 0; i < tracksTree.getNumChildren(); ++i) {
         juce::ValueTree childNode = tracksTree.getChild(i);
 
-        // Создаем модель для узла
         auto* model = trackModels.add(new TrackModel(childNode));
         
-        // Создаем UI компонент для модели
         auto* header = trackHeaders.add(new TrackHeaderComponent(*model));
         addAndMakeVisible(header);
 
@@ -57,19 +53,12 @@ void TrackListComponent::rebuildTrackList() {
         };
     }
 
-    // Обновляем выделение
     updateSelection();
-
-    // Пересчитываем геометрию
     resized();
 }
 
 
 void TrackListComponent::setSelectedTrackId(const juce::String& trackId) {
-    // Пишем ID выбранного трека в корень AppState.
-    // Это автоматически вызовет valueTreePropertyChanged,
-    // который обновит интерфейс через updateSelection().
-    
     const juce::ScopedLock sl(AppState::getInstance().getLock());
     rootTree.setProperty("selectedTrackId", trackId, nullptr);
 }

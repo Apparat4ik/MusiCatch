@@ -1,12 +1,10 @@
 #include "CustomLookAndFeel.h"
 
-CustomLookAndFeel::CustomLookAndFeel()
-{
-    // Инициализация глобальной палитры (позже можно вынести в Constants.h)
-    // Темная тема в стиле Melodyne/Ableton
+CustomLookAndFeel::CustomLookAndFeel() {
+    // Инициализация глобальной палитры
     const juce::Colour bgDark      = juce::Colour(0xFF1E1E1E); // Глубокий серый
     const juce::Colour panelGray   = juce::Colour(0xFF2D2D2D); // Фон панелей
-    const juce::Colour accentBlue  = juce::Colour(0xFF4A90E2); // Тот самый синий для активных элементов
+    const juce::Colour accentBlue  = juce::Colour(0xFF4A90E2); // синий для активных элементов
     const juce::Colour textLight   = juce::Colour(0xFFDCDCDC);
 
     // Применяем цвета к базовым элементам JUCE
@@ -21,8 +19,7 @@ CustomLookAndFeel::CustomLookAndFeel()
 
 void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
                                          float sliderPos, const float rotaryStartAngle,
-                                         const float rotaryEndAngle, juce::Slider& slider)
-{
+                                         const float rotaryEndAngle, juce::Slider& slider) {
     // Современная отрисовка крутилок в виде дуги (Arc), а не 3D-ручки
     auto radius = (float) juce::jmin (width / 2, height / 2) - 4.0f;
     auto centreX = (float) x + (float) width  * 0.5f;
@@ -42,8 +39,7 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int wi
     g.strokePath (backgroundArc, juce::PathStrokeType (lineThickness, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
     // Заполненная часть крутилки (акцентный цвет)
-    if (slider.isEnabled())
-    {
+    if (slider.isEnabled()) {
         juce::Path valueArc;
         valueArc.addCentredArc (centreX, centreY, radius, radius, 0.0f, rotaryStartAngle, angle, true);
         g.setColour (slider.findColour (juce::Slider::rotarySliderFillColourId));
@@ -61,8 +57,7 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int wi
 
 void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height,
                                          float sliderPos, float minSliderPos, float maxSliderPos,
-                                         const juce::Slider::SliderStyle style, juce::Slider& slider)
-{
+                                         const juce::Slider::SliderStyle style, juce::Slider& slider) {
     // Плоский минималистичный фейдер
     g.setColour (slider.findColour (juce::Slider::trackColourId));
     
@@ -80,12 +75,10 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int wi
 void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& button,
                                              const juce::Colour& backgroundColour,
                                              bool shouldDrawButtonAsHighlighted,
-                                             bool shouldDrawButtonAsDown)
-{
+                                             bool shouldDrawButtonAsDown) {
     auto bounds = button.getLocalBounds().toFloat().reduced (1.0f);
     auto baseColour = backgroundColour.withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.5f);
 
-    // Логика нажатия и наведения (Flat UI: просто меняем яркость, никаких градиентов)
     if (shouldDrawButtonAsDown || button.getToggleState())
         baseColour = baseColour.brighter (0.2f); // Включенная кнопка светлее (например, Solo или выбранный трек)
     else if (shouldDrawButtonAsHighlighted)
@@ -102,8 +95,7 @@ void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& bu
 void CustomLookAndFeel::drawScrollbar (juce::Graphics& g, juce::ScrollBar& scrollbar,
                                        int x, int y, int width, int height,
                                        bool isScrollbarVertical, int thumbStartPosition,
-                                       int thumbSize, bool isMouseOver, bool isMouseDown)
-{
+                                       int thumbSize, bool isMouseOver, bool isMouseDown) {
     // Минималистичный скроллбар (как в macOS/современных браузерах)
     g.setColour (juce::Colour(0xFF202020)); // Фон скролла
     g.fillRect (x, y, width, height);
