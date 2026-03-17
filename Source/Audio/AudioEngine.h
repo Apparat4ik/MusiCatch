@@ -25,6 +25,21 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
         mixer.removeAllInputs();
         tracks.clear();
     }
+    
+    void updateSoloStates() {
+        bool isAnyTrackSoloed = false;
+
+        for (auto* track : tracks) {
+            if (track->getSolo()) {
+                isAnyTrackSoloed = true;
+                break;
+            }
+        }
+
+        for (auto* track : tracks) {
+            track->setMutedByOtherSolo(isAnyTrackSoloed && !track->getSolo());
+        }
+    }
 
     // AudioSource методы
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override {
@@ -73,7 +88,8 @@ class PositionableMixerSource : public juce::PositionableAudioSource {
 
 class AudioEngine : public juce::AudioAppComponent,
                     private juce::Timer,
-                    private juce::AsyncUpdater {
+                    private juce::AsyncUpdater,
+                    private juce::ValueTree::Listener {
  public:
     AudioEngine();
     ~AudioEngine() override;
@@ -107,6 +123,7 @@ class AudioEngine : public juce::AudioAppComponent,
     bool isRecording() const { return recording.load(); }
     
     void loadAndAnalyzeFile(const juce::File& file);
+    void updateSoloStates() { trackMixer.updateSoloStates(); }
 
  private:
     void timerCallback() override;
@@ -124,6 +141,9 @@ class AudioEngine : public juce::AudioAppComponent,
     PositionableMixerSource trackMixer;
     juce::AudioTransportSource transportSource;
     std::unique_ptr<juce::ResamplingAudioSource> resampler;
+                        
+    void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged,
+                                      const juce::Identifier& property) override;
     
     double currentSampleRate = 0.0;
 

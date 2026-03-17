@@ -14,9 +14,11 @@ AudioEngine::AudioEngine() {
 
     setAudioChannels(2, 2); // Инициализация аудио (2 in, 2 out)
     startTimerHz(30);
+    AppState::getInstance().getRootNode().addListener(this);
 }
 
 AudioEngine::~AudioEngine() {
+    AppState::getInstance().getRootNode().removeListener(this);
     stopTimer();
     cancelPendingUpdate();
     
@@ -190,4 +192,30 @@ void AudioEngine::loadAndAnalyzeFile(const juce::File& file) {
         // Делаем трек активным
         appState.getRootNode().setProperty("selectedTrackId", model.getUuid().toString(), nullptr);
     });
+}
+
+
+void AudioEngine::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged,
+                                           const juce::Identifier& property) {
+    DBG("ValueTree изменилось! Свойство: " << property.toString());
+    if (property == juce::Identifier("isMuted") || property == juce::Identifier("isSoloed")) {
+        auto parent = treeWhosePropertyHasChanged.getParent();
+        if (parent.isValid()) {
+            int trackIndex = parent.indexOf(treeWhosePropertyHasChanged);
+            
+            if (trackIndex >= 0 && trackIndex < trackProcessors.size()) {
+                auto* track = trackProcessors[trackIndex];
+                
+                bool isMuted = treeWhosePropertyHasChanged.getProperty("isMuted", false);
+                bool isSoloed = treeWhosePropertyHasChanged.getProperty("isSoloed", false);
+                
+                track->setMute(isMuted);
+                track->setSolo(isSoloed);
+                
+                if (property == juce::Identifier("isSoloed")) {
+                    updateSoloStates();
+                }
+            }
+        }
+    }
 }

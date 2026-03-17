@@ -39,8 +39,7 @@ TrackHeaderComponent::TrackHeaderComponent(TrackModel& model) : trackModel(model
     // Mute button
     muteButton.setClickingTogglesState(true);
     muteButton.setTooltip("Mute track");
-    muteButton.onClick = [this]
-    {
+    muteButton.onClick = [this] {
         trackModel.setMuted(muteButton.getToggleState());
     };
     addAndMakeVisible(muteButton);
@@ -65,8 +64,7 @@ TrackHeaderComponent::~TrackHeaderComponent() {
     trackModel.getTrackTree().removeListener(this);
 }
 
-void TrackHeaderComponent::setSelected(bool shouldBeSelected)
-{
+void TrackHeaderComponent::setSelected(bool shouldBeSelected) {
     if (selected == shouldBeSelected)
         return;
 
@@ -74,8 +72,7 @@ void TrackHeaderComponent::setSelected(bool shouldBeSelected)
     repaint();
 }
 
-void TrackHeaderComponent::paint(juce::Graphics& g)
-{
+void TrackHeaderComponent::paint(juce::Graphics& g) {
     auto bounds = getLocalBounds();
 
     // синий если выбран, иначе тёмно-серый
