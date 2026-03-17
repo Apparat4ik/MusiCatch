@@ -1,0 +1,381 @@
+@startuml
+
+/' Оформление (по желанию, делает схему аккуратнее) '/
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+
+/' Objects '/
+
+class AppState {
+	-AppState()
+	-~AppState()
+	+{static} getInstance() : AppState&
+	-dataLock : juce::CriticalSection
+	+getLock() : juce::CriticalSection&
+	+getTrackList() : juce::ValueTree
+	-rootNode : juce::ValueTree
+	+getRootNode() : juce::ValueTree&
+	-{static} projectNodeId : static const juce::Identifier
+	-{static} trackNodeId : static const juce::Identifier
+	-{static} tracksNodeId : static const juce::Identifier
+	+addTrack(const juce::String& trackName) : void
+	+removeTrack(int index) : void
+}
+
+class AudioEngine {
+	+AudioEngine()
+	+~AudioEngine()
+	-trackMixer : PositionableMixerSource
+	+getTrackMixer() : PositionableMixerSource&
+	-recordingBuffer : RecordingBuffer
+	+addTrack() : TrackProcessor*
+	+isPlaying() : bool {query}
+	+isRecording() : bool {query}
+	-currentSampleRate : double
+	+getCurrentPosition() : double {query}
+	+getCurrentSampleRate() : double {query}
+	-currentBlockSize : int
+	+getDeviceManager() : juce::AudioDeviceManager&
+	-formatManager : juce::AudioFormatManager
+	-transportSource : juce::AudioTransportSource
+	-trackProcessors : juce::OwnedArray<TrackProcessor>
+	-recording : std::atomic<bool>
+	-resampler : std::unique_ptr<juce::ResamplingAudioSource>
+	+getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) : void
+	+handleAsyncUpdate() : void
+	+loadAndAnalyzeFile(const juce::File& file) : void
+	+loadFileIntoTrack(TrackProcessor* track, const juce::File& file) : void
+	+play() : void
+	+prepareToPlay(int samplesPerBlockExpected, double sampleRate) : void
+	+releaseResources() : void
+	+removeTrack(TrackProcessor* trackToRemove) : void
+	+rewind() : void
+	+setPosition(double pos) : void
+	+setRecording(bool isRecording) : void
+	+stop() : void
+	-timerCallback() : void
+}
+
+class AudioExporter {
+	+{static} exportProjectToWav(AudioEngine& engine, const juce::File& targetFile) : bool
+	+{static} exportTrackToMidi(const TrackModel& track, const juce::File& targetFile) : bool
+}
+
+class AudioImporter {
+	+{static} loadIntoBuffer(const juce::File& file, juce::AudioFormatManager& formatManager, juce::AudioBuffer<float>& targetBuffer, double& outSampleRate) : bool
+	+{static} loadAudioFile(const juce::File& file, juce::AudioFormatManager& formatManager) : std::unique_ptr<juce::AudioFormatReaderSource>
+}
+
+class CustomLookAndFeel {
+	+CustomLookAndFeel()
+	+~CustomLookAndFeel()
+	+drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) : void
+	+drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, const juce::Slider::SliderStyle style, juce::Slider& slider) : void
+	+drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider& slider) : void
+	+drawScrollbar(juce::Graphics& g, juce::ScrollBar& scrollbar, int x, int y, int width, int height, bool isScrollbarVertical, int thumbStartPosition, int thumbSize, bool isMouseOver, bool isMouseDown) : void
+}
+
+class MainComponent {
+	+MainComponent()
+	+~MainComponent()
+	-appState : AppState&
+	-audioEngine : AudioEngine
+	-customLookAndFeel : CustomLookAndFeel
+	-pianoKeyboard : PianoKeyboardComponent
+	-pianoRoll : PianoRollComponent
+	-playhead : PlayheadOverlay
+	-timeline : TimelineComponent
+	-trackList : TrackListComponent
+	-transportBar : TransportBar
+	-keyboardViewport : juce::Viewport
+	-pianoRollViewport : juce::Viewport
+	+paint(juce::Graphics& g) : void
+	+resized() : void
+	-scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) : void
+}
+
+class NoteComponent {
+	+NoteComponent(const juce::Uuid& noteId, TrackModel track, juce::Colour colour)
+	+~NoteComponent()
+	-trackModel : TrackModel
+	-isDragging : bool
+	-isHovered : bool
+	-noteColour : juce::Colour
+	-dragStartPos : juce::Point<int>
+	-noteUuid : juce::Uuid
+	+getNoteId() : juce::Uuid& {query}
+	-{static} kBorderWidth : static constexpr float
+	-{static} kCornerSize : static constexpr float
+	+mouseDown(const juce::MouseEvent& e) : void
+	+mouseDrag(const juce::MouseEvent& e) : void
+	+mouseEnter(const juce::MouseEvent& e) : void
+	+mouseExit(const juce::MouseEvent& e) : void
+	+mouseUp(const juce::MouseEvent& e) : void
+	+paint(juce::Graphics& g) : void
+	+setNoteColour(juce::Colour newColour) : void
+}
+
+class PianoKeyboardComponent {
+	+PianoKeyboardComponent(PianoRollComponent& pr)
+	+~PianoKeyboardComponent()
+	-pianoRoll : PianoRollComponent&
+	+paint(juce::Graphics& g) : void
+}
+
+class PianoRollComponent {
+	+PianoRollComponent(AppState& state, AudioEngine& engine)
+	+~PianoRollComponent()
+	-appState : AppState&
+	+getNoteHeight() : float {query}
+	-noteHeight : float
+	+pitchToY(int midiNote) : float {query}
+	-pixelsPerSecond : float
+	+timeToX(float timeSeconds) : float {query}
+	+xToTime(float x) : float {query}
+	+getMaxMidiNote() : int {query}
+	+getMinMidiNote() : int {query}
+	-maxMidiNote : int
+	-minMidiNote : int
+	+yToPitch(float y) : int {query}
+	-activeNoteComponents : juce::OwnedArray<NoteComponent>
+	-activeTrackId : juce::String
+	-drawGrid(juce::Graphics& g) : void
+	-drawInactiveTracks(juce::Graphics& g) : void
+	+paint(juce::Graphics& g) : void
+	+resized() : void
+	+setZoom(float newPixelsPerSecond, float newNoteHeight) : void
+	+updateNotes() : void
+	-valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded) : void
+	-valueTreeChildOrderChanged(juce::ValueTree& parentTreeWhoseChildrenHaveMoved, int oldIndex, int newIndex) : void
+	-valueTreeChildRemoved(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) : void
+	-valueTreeParentChanged(juce::ValueTree& treeWhoseParentHasChanged) : void
+	-valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) : void
+}
+
+class PitchDetector {
+	+PitchDetector(int fftOrder)
+	+~PitchDetector()
+	-findPitchFreq(const float* spectrum, int fftSize, double sampleRate) : float {query}
+	-freqToMidi(float freq) : int {query}
+	-hannWindow : juce::AudioBuffer<float>
+	-fftData : juce::HeapBlock<float>
+	-fft : juce::dsp::FFT
+	+analyze(const juce::AudioBuffer<float>& buffer, double sampleRate) : std::vector<NoteData>
+	+analyzeTrack(const juce::AudioBuffer<float>& buffer, double sampleRate) : std::vector<NoteData>
+}
+
+class PlayheadOverlay {
+	+PlayheadOverlay(AudioEngine& engineToUse)
+	+~PlayheadOverlay()
+	-engine : AudioEngine&
+	+hitTest(int x, int y) : bool
+	-pixelsPerSecond : double
+	-currentPositionX : float
+	-rulerHeight : int
+	-xOffset : int
+	+paint(juce::Graphics& g) : void
+	+setPixelsPerSecond(double newPixelsPerSecond) : void
+	+setXOffset(int newOffset) : void
+	-timerCallback() : void
+}
+
+class PositionableMixerSource {
+	+isLooping() : bool {query}
+	-tracks : juce::Array<TrackProcessor*>
+	-mixer : juce::MixerAudioSource
+	-currentPosition : juce::int64
+	+getNextReadPosition() : juce::int64 {query}
+	+getTotalLength() : juce::int64 {query}
+	+addTrack(TrackProcessor* tp) : void
+	+getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) : void
+	+prepareToPlay(int samplesPerBlockExpected, double sampleRate) : void
+	+releaseResources() : void
+	+removeAllTracks() : void
+	+removeTrack(TrackProcessor* tp) : void
+	+setLooping(bool) : void
+	+setNextReadPosition(juce::int64 newPosition) : void
+}
+
+class RecordingBuffer {
+	+RecordingBuffer(int numChannels, int maxSamples)
+	-sampleRate : double
+	+getTotalSamples() : int {query}
+	-maxSamples : int
+	-recordingFifo : juce::AbstractFifo
+	-fifoData : juce::AudioBuffer<float>
+	+getRecordedData() : juce::AudioBuffer<float>
+	+clear() : void
+	+prepareToRecord(double sampleRate) : void
+	+pushBlock(const juce::AudioBuffer<float>& buffer, int startSample, int numSamples) : void
+}
+
+class TimelineComponent {
+	+TimelineComponent(AudioEngine& engineToUse)
+	+~TimelineComponent()
+	-engine : AudioEngine&
+	-pixelsPerSecond : double
+	-xOffset : int
+	+mouseDown(const juce::MouseEvent& event) : void
+	+mouseDrag(const juce::MouseEvent& event) : void
+	+paint(juce::Graphics& g) : void
+	+setPixelsPerSecond(double newPixelsPerSecond) : void
+	+setXOffset(int newOffset) : void
+}
+
+class TrackHeaderComponent {
+	+TrackHeaderComponent(TrackModel& model)
+	+~TrackHeaderComponent()
+	-trackModel : TrackModel&
+	+isSelected() : bool {query}
+	-selected : bool
+	-nameLabel : juce::Label
+	-exportMidiButton : juce::TextButton
+	-muteButton : juce::TextButton
+	-soloButton : juce::TextButton
+	-{static} kButtonSize : static constexpr int
+	-{static} kColorMarkerWidth : static constexpr int
+	-{static} kPadding : static constexpr int
+	-fileChooser : std::unique_ptr<juce::FileChooser>
+	+mouseDown(const juce::MouseEvent& e) : void
+	+paint(juce::Graphics& g) : void
+	+resized() : void
+	+setSelected(bool shouldBeSelected) : void
+	-updateButtonStates() : void
+	-valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) : void
+}
+
+class TrackListComponent {
+	+TrackListComponent()
+	+~TrackListComponent()
+	-trackHeaders : juce::OwnedArray<TrackHeaderComponent>
+	-trackModels : juce::OwnedArray<TrackModel>
+	-rootTree : juce::ValueTree
+	-tracksTree : juce::ValueTree
+	-{static} kTrackHeight : static constexpr int
+	+paint(juce::Graphics& g) : void
+	-rebuildTrackList() : void
+	+resized() : void
+	-setSelectedTrackId(const juce::String& trackId) : void
+	-updateSelection() : void
+	-valueTreeChildAdded(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenAdded) : void
+	-valueTreeChildRemoved(juce::ValueTree& parentTree, juce::ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) : void
+	-valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) : void
+}
+
+class TrackModel {
+	+TrackModel()
+	+TrackModel(juce::ValueTree trackTreeToUse)
+	+~TrackModel()
+	+isMuted() : bool {query}
+	+isSoloed() : bool {query}
+	+getNumNotes() : int {query}
+	+getNoteList() : juce::Array<NoteData> {query}
+	+getColour() : juce::Colour {query}
+	+getName() : juce::String {query}
+	+getUuid() : juce::Uuid {query}
+	+getTrackTree() : juce::ValueTree {query}
+	-trackTree : juce::ValueTree
+	-{static} noteNodeId : static const juce::Identifier
+	-{static} notesNodeId : static const juce::Identifier
+	+addNote(const NoteData& note) : void
+	+removeNote(int noteIndex) : void
+	+setColour(const juce::Colour& newColour) : void
+	+setMuted(bool shouldMute) : void
+	+setName(const juce::String& newName) : void
+	+setSoloed(bool shouldSolo) : void
+}
+
+class TrackProcessor {
+	+TrackProcessor()
+	+~TrackProcessor()
+	+getMute() : bool {query}
+	+getSolo() : bool {query}
+	+isLooping() : bool {query}
+	-currentSampleRate : double
+	-currentBlockSize : int
+	-sourceMutex : juce::CriticalSection
+	+getNextReadPosition() : juce::int64 {query}
+	+getTotalLength() : juce::int64 {query}
+	-isMuted : std::atomic<bool>
+	-isSoloed : std::atomic<bool>
+	-mutedByOtherSolo : std::atomic<bool>
+	-currentSource : std::unique_ptr<juce::PositionableAudioSource>
+	+getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) : void
+	+prepareToPlay(int samplesPerBlockExpected, double sampleRate) : void
+	+releaseResources() : void
+	+setLooping(bool shouldLoop) : void
+	+setMute(bool shouldMute) : void
+	+setMutedByOtherSolo(bool isMutedBySolo) : void
+	+setNextReadPosition(juce::int64 newPosition) : void
+	+setSolo(bool shouldSolo) : void
+	+setSource(std::unique_ptr<juce::PositionableAudioSource> newSource) : void
+}
+
+class TransportBar {
+	+TransportBar(AudioEngine& engineToUse)
+	+~TransportBar()
+	-engine : AudioEngine&
+	-loadButton : juce::TextButton
+	-pauseButton : juce::TextButton
+	-playButton : juce::TextButton
+	-recordButton : juce::TextButton
+	-saveButton : juce::TextButton
+	-stopButton : juce::TextButton
+	-fileChooser : std::unique_ptr<juce::FileChooser>
+	+paint(juce::Graphics& g) : void
+	+resized() : void
+}
+
+class NoteData << (S,#FF7700) struct >> {
+	+operator==(const NoteData& other) : bool {query}
+	+duration : float
+	+startTime : float
+	+velocity : float
+	+midiPitch : int
+}
+
+class "juce::VariantConverter<NoteData>" as VariantConverterNoteData {
+	+{static} fromVar(const juce::var& v) : NoteData
+	+{static} toVar(const NoteData& n) : juce::var
+}
+
+
+/' Inheritance & Relationships '/
+
+AudioEngine *-- PositionableMixerSource
+AudioEngine *-- RecordingBuffer
+AudioEngine *-- TrackProcessor
+
+MainComponent *-- AppState
+MainComponent *-- AudioEngine
+MainComponent *-- CustomLookAndFeel
+MainComponent *-- PianoKeyboardComponent
+MainComponent *-- PianoRollComponent
+MainComponent *-- PlayheadOverlay
+MainComponent *-- TimelineComponent
+MainComponent *-- TrackListComponent
+MainComponent *-- TransportBar
+
+NoteComponent *-- TrackModel
+PianoKeyboardComponent *-- PianoRollComponent
+PianoRollComponent *-- AppState
+PianoRollComponent *-- NoteComponent
+PlayheadOverlay *-- AudioEngine
+PositionableMixerSource o-- TrackProcessor
+TimelineComponent *-- AudioEngine
+TrackHeaderComponent *-- TrackModel
+TrackListComponent *-- TrackHeaderComponent
+TrackListComponent *-- TrackModel
+TransportBar *-- AudioEngine
+
+/' --- Добавленные связи (Зависимости) --- '/
+TrackModel ..> NoteData : "uses"
+PitchDetector ..> NoteData : "creates"
+PianoRollComponent ..> NoteData : "deserializes"
+VariantConverterNoteData ..> NoteData : "converts"
+
+AudioEngine ..> PitchDetector : "calls"
+AudioExporter ..> TrackModel : "reads"
+AudioExporter ..> AudioEngine : "reads"
+
+@enduml

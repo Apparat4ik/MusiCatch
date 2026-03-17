@@ -39,6 +39,7 @@ void AppState::addTrack(const juce::String& trackName) {
     if (tracksNode.isValid()) {
         tracksNode.addChild(newTrack, -1, nullptr);
     }
+    DBG("AppState: Добавлен новый трек: " << trackName);
 }
 
 void AppState::removeTrack(int index) {

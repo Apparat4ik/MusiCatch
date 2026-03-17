@@ -4,18 +4,20 @@
 PitchDetector::PitchDetector(int fftOrder)
     : fft(fftOrder) {
     int fftSize = 1 << fftOrder;
-    fftData.malloc(fftSize * 2);  // real + imag (но используем только real для forward)
+    fftData.malloc(fftSize * 2); 
 
-    hannWindow.setSize(1, fftSize, false, false, true);
+    hannWindow.setSize(1, fftSize, false, false, true); // окно Ханна
     auto* w = hannWindow.getWritePointer(0);
     for (int i = 0; i < fftSize; ++i) {
+        // формула для вычисления окна (приведение к нулю крайних значений)
         w[i] = 0.5f * (1.0f - std::cos(juce::MathConstants<float>::twoPi * i / fftSize));
     }
 }
 
 PitchDetector::~PitchDetector() = default;
 
-std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>& buffer, double sampleRate) {
+std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>& buffer
+                                                  , double sampleRate) {
     std::vector<NoteData> detectedNotes;
     if (buffer.getNumChannels() == 0 || buffer.getNumSamples() < fft.getSize())
         return detectedNotes;
@@ -49,7 +51,8 @@ std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>
                 note.midiPitch = currentMidiPitch;
                 note.startTime = currentNoteStart;
                 note.duration = timeInSeconds - currentNoteStart;
-                note.velocity = 0.8f;
+                float rms = buffer.getRMSLevel(0, 0, numSamples); // громкость текущего буфера
+                note.velocity = juce::jlimit(0.0f, 1.0f, rms * 2.0f);
                 detectedNotes.push_back(note);
             }
             
@@ -69,15 +72,18 @@ std::vector<NoteData> PitchDetector::analyzeTrack(const juce::AudioBuffer<float>
         note.midiPitch = currentMidiPitch;
         note.startTime = currentNoteStart;
         note.duration = static_cast<float>(numSamples / sampleRate) - currentNoteStart;
-        note.velocity = 0.8f;
+        float rms = buffer.getRMSLevel(0, 0, numSamples); // громкость текущего буфера
+        note.velocity = juce::jlimit(0.0f, 1.0f, rms * 2.0f);
         detectedNotes.push_back(note);
     }
 
+    DBG("PitchDetector: Анализ завершен. Найдено нот: " << detectedNotes.size());
     return detectedNotes;
 }
 
 
-std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buffer, double sampleRate) {
+std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buffer
+                                             , double sampleRate) {
     if (buffer.getNumChannels() == 0) return {};
     int numSamples = buffer.getNumSamples();
     int fftSize = fft.getSize();
@@ -93,7 +99,7 @@ std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buf
         fftReal[i] = (i < numSamples ? input[i] : 0.0f) * hannWindow.getSample(0, i);
     }
 
-    // FFT (magnitude спектр)
+    // FFT (возвращает спектр)
     fft.performFrequencyOnlyForwardTransform(fftReal);
 
     // Поиск пика
@@ -103,17 +109,19 @@ std::vector<NoteData> PitchDetector::analyze(const juce::AudioBuffer<float>& buf
         note.midiPitch = juce::jlimit(0, 127, freqToMidi(freq));
         note.startTime = 0.0f;
         note.duration = static_cast<float>(numSamples / sampleRate);
-        note.velocity = 0.7f;
+        float rms = buffer.getRMSLevel(0, 0, numSamples); // громкость текущего буфера
+        note.velocity = juce::jlimit(0.0f, 1.0f, rms * 2.0f);
         notes.emplace_back(note);
     }
 
     return notes;
 }
 
+
 float PitchDetector::findPitchFreq(const float* spectrum, int fftSize, double sampleRate) const {
     float maxMag = 0.0f;
     int maxBin = 0;
-    for (int i = 4; i < fftSize / 2; ++i) {
+    for (int i = 2; i < fftSize / 2; i++) { // fftSize / 2 потому что вторая часть fft симетрична
         if (spectrum[i] > maxMag) {
             maxMag = spectrum[i];
             maxBin = i;

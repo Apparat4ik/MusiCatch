@@ -41,6 +41,8 @@ void TrackProcessor::getNextAudioBlock(const juce::AudioSourceChannelInfo& buffe
                       mutedByOtherSolo.load(std::memory_order_relaxed);
 
     if (sourceMutex.tryEnter()) {
+        // сначала читаем следующий блок, чтобы внутренний таймер
+        // звуковой дорожки не остановился
         if (currentSource != nullptr) {
             currentSource->getNextAudioBlock(bufferToFill);
 

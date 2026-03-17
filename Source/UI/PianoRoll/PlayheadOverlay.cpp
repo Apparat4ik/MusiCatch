@@ -5,7 +5,6 @@ PlayheadOverlay::PlayheadOverlay(AudioEngine& engineToUse)
     // Пропускаем клики сквозь ползунок, чтобы они доходили до Таймлайна и PianoRoll
     setInterceptsMouseClicks(false, false);
     
-    // ВАЖНО: Запускаем таймер перерисовки (60 кадров в секунду)
     startTimerHz(60);
 }
 
@@ -60,9 +59,6 @@ void PlayheadOverlay::timerCallback() {
         currentPositionX = newPositionX;
         repaint();
         
-        // Раскомментируй строку ниже, если ползунок всё равно стоит на месте.
-        // Если в консоль побегут нули, значит движок почему-то не отдает время UI.
-        DBG("Playhead time: " << timeInSeconds << " | px: " << currentPositionX);
     }
 }
 

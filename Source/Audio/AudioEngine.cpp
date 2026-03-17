@@ -5,7 +5,9 @@ AudioEngine::AudioEngine() {
     formatManager.registerBasicFormats();
 
     // Цепочка: Микшер треков вставляется в Транспорт.
-    transportSource.setSource(&trackMixer, 0, nullptr, 44100.0);
+    transportSource.setSource(&trackMixer, 0, nullptr, 44100.0); // Последний параметр
+                                                                 // для корректировки
+                                                                 // частоты дискретизации
 
     // Для безопасного вывода в систему
     resampler = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
@@ -24,14 +26,13 @@ AudioEngine::~AudioEngine() {
 }
 
 
-void AudioEngine::handleAsyncUpdate() {
-    // Здесь можно уведомлять UI (например, PianoRoll) о смене playhead
-}
+void AudioEngine::handleAsyncUpdate() {}
 
 
 void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
     currentSampleRate = sampleRate;
     currentBlockSize = samplesPerBlockExpected; // Сохраняем размер блока
+    DBG("Инициализация аудио. Буфер: " << samplesPerBlockExpected << " сэмплов.");
     
     recordingBuffer.prepareToRecord(sampleRate);
     
@@ -43,15 +44,14 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 }
 
 void AudioEngine::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    // В AudioAppComponent буфер изначально содержит аудио с входных каналов ОС.
-    // забираем эти данные ДО того, как микшер и ресемплер их перезапишут.
+    // В буфере содержится аудио с входных каналов
+    // забираем эти данные до того, как микшер и ресемплер их перезапишут
     if (recording.load()) {
-        // Безопасно передаем сырые данные с микрофона (0-й канал) напрямую в FIFO
         if (bufferToFill.buffer->getNumChannels() > 0) {
             recordingBuffer.pushBlock(*bufferToFill.buffer, bufferToFill.startSample, bufferToFill.numSamples);
         }
     }
-    juce::ScopedNoDenormals noDenormals; // Защита от денормализованных чисел (спайков CPU)
+    juce::ScopedNoDenormals noDenormals; // Защита от денормализованных чисел
     
     if (resampler != nullptr)
         resampler->getNextAudioBlock(bufferToFill);
@@ -111,6 +111,7 @@ void AudioEngine::setRecording(bool shouldRecord) {
     if (shouldRecord) {
         recordingBuffer.clear();
         recording.store(true);
+        DBG("Запись начата (SampleRate: " << currentSampleRate << ")");
     } else {
         recording.store(false);
         juce::Thread::sleep(20); // Микропауза для завершения аудиопотока

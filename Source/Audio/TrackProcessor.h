@@ -2,9 +2,8 @@
 #include <JuceHeader.h>
 #include <atomic>
 
-class TrackProcessor : public juce::PositionableAudioSource
-{
-public:
+class TrackProcessor : public juce::PositionableAudioSource {
+ public:
     TrackProcessor();
     ~TrackProcessor() override;
 
@@ -34,19 +33,19 @@ public:
     // Для глобальной логики микшера: если другой трек в Solo, этот должен молчать
     void setMutedByOtherSolo(bool isMutedBySolo);
 
-private:
+ private:
     // Текущий источник аудио (например, AudioFormatReaderSource или RecordingBufferSource)
     std::unique_ptr<juce::PositionableAudioSource> currentSource;
 
     // Мьютекс для защиты замены currentSource прямо во время воспроизведения
     juce::CriticalSection sourceMutex;
 
-    // Атомарные флаги для lock-free чтения в getNextAudioBlock
+    // Атомарные флаги для чтения в getNextAudioBlock
     std::atomic<bool> isMuted { false };
     std::atomic<bool> isSoloed { false };
     std::atomic<bool> mutedByOtherSolo { false };
 
-    // Кэшируем параметры для инициализации новых source'ов
+    // Кэшируем параметры для инициализации новых источников
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
 

@@ -2,19 +2,16 @@
 
 std::unique_ptr<juce::AudioFormatReaderSource> AudioImporter::loadAudioFile(
     const juce::File& file,
-    juce::AudioFormatManager& formatManager)
-{
-    if (!file.existsAsFile())
-    {
-        DBG("AudioImporter::loadAudioFile - File does not exist: " + file.getFullPathName());
+    juce::AudioFormatManager& formatManager) {
+    if (!file.existsAsFile()) {
+        DBG("AudioImporter::loadAudioFile - Файла не существует: " + file.getFullPathName());
         return nullptr;
     }
 
     auto* reader = formatManager.createReaderFor(file);
     
-    if (reader == nullptr)
-    {
-        DBG("AudioImporter::loadAudioFile - Unsupported format or corrupted file: " + file.getFullPathName());
+    if (reader == nullptr) {
+        DBG("AudioImporter::loadAudioFile - Неподдерживаемый формат файла: " + file.getFullPathName());
         return nullptr;
     }
 
@@ -31,7 +28,7 @@ bool AudioImporter::loadIntoBuffer(
     std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
     
     if (reader == nullptr) {
-        DBG("AudioImporter::loadIntoBuffer - Failed to load file: " + file.getFullPathName());
+        DBG("AudioImporter::loadIntoBuffer - Ошибка загрузки файла: " + file.getFullPathName());
         return false;
     }
 
@@ -44,5 +41,6 @@ bool AudioImporter::loadIntoBuffer(
 
     reader->read(&targetBuffer, 0, lengthInSamples, 0, true, true);
     
+    DBG("AudioImporter: Файл загружен. Длина: " << targetBuffer.getNumSamples() << " сэмплов.");
     return true;
 }

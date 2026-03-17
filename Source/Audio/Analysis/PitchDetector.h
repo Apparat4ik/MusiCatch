@@ -4,7 +4,7 @@
 #include "../../Model/NoteData.h"
 
 class PitchDetector {
-public:
+ public:
     PitchDetector(int fftOrder = 10);  // 1024 точек
     ~PitchDetector();
 
@@ -12,7 +12,7 @@ public:
     
     std::vector<NoteData> analyzeTrack(const juce::AudioBuffer<float>& buffer, double sampleRate);
 
-private:
+ private:
     juce::dsp::FFT fft;
     juce::AudioBuffer<float> hannWindow;
     juce::HeapBlock<float> fftData;  // float* для legacy FFT (magnitude)

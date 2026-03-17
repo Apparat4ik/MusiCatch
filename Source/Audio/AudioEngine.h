@@ -8,7 +8,7 @@
 #include "../Core/AppState.h"
 #include "../Utils/AudioImporter.h"
 
-// Вспомогательный класс для микширования нескольких PositionableAudioSource
+// Вспомогательный класс для микширования нескольких источников аудио (дорожек)
 class PositionableMixerSource : public juce::PositionableAudioSource {
  public:
     void addTrack(TrackProcessor* tp) {

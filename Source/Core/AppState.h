@@ -6,9 +6,6 @@ class AppState {
   public:
     static AppState& getInstance();
 
-    AppState();
-    ~AppState() = default;
-    
     // Добавляет новый трек в конец списка
     void addTrack(const juce::String& trackName);
 
@@ -24,6 +21,9 @@ class AppState {
     juce::CriticalSection& getLock() { return dataLock; }
 
  private:
+    AppState();
+    ~AppState() = default;
+    
     juce::ValueTree rootNode;
 
     // Мьютекс для синхронизации доступа (UI vs Audio Analysis Thread)

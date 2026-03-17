@@ -2,10 +2,10 @@
 
 const juce::Identifier TrackModel::notesNodeId ("Notes");
 const juce::Identifier TrackModel::noteNodeId  ("Note");
+// juce::Identifier позволяет сравнивать строки по их хэшу
 
 TrackModel::TrackModel(juce::ValueTree trackTreeToUse)
     : trackTree (trackTreeToUse) {
-    // Проверяем, что передан правильный узел
     juce::ignoreUnused(trackTreeToUse);
 }
 

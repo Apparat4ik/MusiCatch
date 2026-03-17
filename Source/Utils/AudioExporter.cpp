@@ -6,7 +6,7 @@ bool AudioExporter::exportProjectToWav(AudioEngine& engine, const juce::File& ta
     // Получаем длину самого длинного трека
     juce::int64 totalLengthInSamples = mixer.getTotalLength();
     if (totalLengthInSamples <= 0) {
-        DBG("Нет данных для экспорта.");
+        DBG("AudioExport: Нет данных для экспорта.");
         return false;
     }
 
@@ -26,7 +26,7 @@ bool AudioExporter::exportProjectToWav(AudioEngine& engine, const juce::File& ta
     );
 
     if (writer == nullptr) {
-        DBG("Ошибка: не удалось создать AudioFormatWriter для MP3. Проверьте LAME энкодер.");
+        DBG("AudioExport: Ошибка: не удалось создать AudioFormatWriter для WAV. Проверьте LAME энкодер.");
         return false;
     }
 
@@ -67,7 +67,7 @@ bool AudioExporter::exportProjectToWav(AudioEngine& engine, const juce::File& ta
     mixer.setNextReadPosition(originalPosition);
     if (wasPlaying) engine.play();
 
-    DBG("Экспорт успешно завершен: " << targetFile.getFullPathName());
+    DBG("Экспорт в wav успешно завершен: " << targetFile.getFullPathName());
     return true;
 }
 
@@ -85,7 +85,7 @@ bool AudioExporter::exportTrackToMidi(const TrackModel& track, const juce::File&
     auto notes = track.getNoteList();
 
     if (notes.isEmpty()) {
-        DBG("Трек пуст, нет нот для экспорта в MIDI.");
+        DBG("AudioExport: Трек пуст, нет нот для экспорта в MIDI.");
         return false;
     }
 
@@ -128,6 +128,6 @@ bool AudioExporter::exportTrackToMidi(const TrackModel& track, const juce::File&
         return success;
     }
 
-    DBG("Ошибка: не удалось открыть файл для записи MIDI.");
+    DBG("AudioExport: Ошибка: не удалось открыть файл для записи MIDI.");
     return false;
 }

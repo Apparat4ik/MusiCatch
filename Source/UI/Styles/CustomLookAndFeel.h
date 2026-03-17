@@ -1,9 +1,8 @@
 #pragma once
 #include <JuceHeader.h>
 
-class CustomLookAndFeel : public juce::LookAndFeel_V4
-{
-public:
+class CustomLookAndFeel : public juce::LookAndFeel_V4 {
+ public:
     CustomLookAndFeel();
     ~CustomLookAndFeel() override = default;
 
